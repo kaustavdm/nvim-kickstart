@@ -398,7 +398,11 @@ do
 
   --- Markdown render / Markdown preview
   vim.pack.add { gh "MeanderingProgrammer/render-markdown.nvim" }
-  require('render-markdown').setup({
+  local markdown = require('render-markdown')
+  markdown.setup({
+    -- disabled by default. Run `:RenderMarkdown toggle` to activate
+    -- Run `:RenderMarkdown buf_toggle` to enable for current buffer
+    enabled = false,
     completions = { lsp = { enabled = true } },
     -- render only in Normal and Command mode. Expected: edit as code in Insert, hit Esc to view Render
     render_modes = { 'n', 'c' },
@@ -429,6 +433,36 @@ do
       -- Disable gitcommit injections
       gitcommit = { enabled = false }
     }
+  })
+
+  -- Toggle keymaps: buffer-local, only in markdown buffers and only if RenderMarkdown is available.
+  -- The plugin has no keymap API of its own, so this uses a FileType autocmd (plugin's `file_types`).
+  -- which-key shows an on/off toggle icon that reflects the live state.
+  local function toggle_icon(on)
+    return on and { icon = '\u{f205}', color = 'green' } or { icon = '\u{f204}', color = 'grey' }
+  end
+  local function buf_enabled(buf)
+    -- Per-buffer state is not exposed by the public API
+    local ok, cfg = pcall(function() return require('render-markdown.state').get(buf) end)
+    return ok and cfg.enabled or false
+  end
+  vim.api.nvim_create_autocmd('FileType', {
+    group = vim.api.nvim_create_augroup('render-markdown-keymaps', { clear = true }),
+    pattern = require('render-markdown.state').file_types or 'markdown',
+    callback = function(ev)
+      if vim.fn.exists(':RenderMarkdown') ~= 2 then return end
+      local function map(lhs, fn, desc)
+        vim.keymap.set('n', lhs, fn, { buffer = ev.buf, desc = desc })
+      end
+      map('<leader>tmr', function() markdown.toggle() end, '[T]oggle [m]arkdown [r]ender')
+      map('<leader>tmb', function() markdown.buf_toggle() end, '[T]oggle [m]arkdown render in [b]uffer')
+      -- which-key metadata only (group name + live toggle icons); keymaps above are real buffer-local maps
+      require('which-key').add {
+        { '<leader>tm', buffer = ev.buf, group = 'Markdown render', icon = function() return toggle_icon(markdown.get()) end },
+        { '<leader>tmr', buffer = ev.buf, icon = function() return toggle_icon(markdown.get()) end },
+        { '<leader>tmb', buffer = ev.buf, icon = function() return toggle_icon(buf_enabled(ev.buf)) end },
+      }
+    end,
   })
 end
 
