@@ -351,7 +351,7 @@ do
 
   -- If a nerd font is available, load the icons module for pretty icons in various plugins.
   if vim.g.have_nerd_font then
-    require('mini.icons').setup()
+    require('mini.icons').setup({ style = 'ascii' })
     -- Used for backwards compatibility with plugins that require `nvim-web-devicons` (e.g. telescope.nvim)
     MiniIcons.mock_nvim_web_devicons()
   end
@@ -393,6 +393,41 @@ do
 
   -- ... and there is more!
   --  Check out: https://github.com/nvim-mini/mini.nvim
+
+  --- Markdown render / Markdown preview
+  vim.pack.add { gh "MeanderingProgrammer/render-markdown.nvim" }
+  require('render-markdown').setup({
+    completions = { lsp = { enabled = true } },
+    -- render only in Normal and Command mode. Expected: edit as code in Insert, hit Esc to view Render
+    render_modes = { 'n', 'c' },
+    -- disable heading atx render and signs
+    heading = {
+      enabled = true,
+      sign = false,
+      width = { 'full', 'block', 'block', 'block', 'block', 'block' },
+      min_width = 60,
+      position = 'overlay',
+      left_margin = 0,
+      left_pad = 0,
+      right_pad = 2,
+      icons = { '# ', '## ', '### ', '#### ', '##### ', '###### ' }
+    },
+    -- disable bullet
+    bullet = { enabled = true },
+    -- Disable anti-conceal since I don't want to see actual markdown code in Normal mode
+    anti_conceal = { enabled = false },
+    -- disable wrapping in pipe_table. wrap = true replaces the neovim line with virtual line
+    -- wrap = false stops the wrap but breaks long wrapped table headers badly
+    -- uncomment following line if facing issues with the virtual line rendering
+    -- pipe_table = { wrap = false },
+    -- Latex rendering in Markdown. Disabled. Set latex.enabled to true if using latex
+    -- also needs to have a latex converter installed 
+    latex = { enabled = false },
+    injections = {
+      -- Disable gitcommit injections
+      gitcommit = { enabled = false }
+    }
+  })
 end
 
 -- ============================================================
