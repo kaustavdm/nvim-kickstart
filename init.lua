@@ -406,7 +406,7 @@ do
     heading = {
       enabled = true,
       sign = false,
-      width = { 'full', 'block', 'block', 'block', 'block', 'block' },
+      width = { 'full', 'full', 'block', 'block', 'block', 'block' },
       min_width = 60,
       position = 'overlay',
       left_margin = 0,
